@@ -1,8 +1,27 @@
 <!DOCTYPE html>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="lingo.css">
-<script src="dictionary/index.js"></script>
+<script src="lingo/dictionary/index.js"></script>
 <style>
+    html {
+        background-color: black;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+        min-width: 20em;
+        max-width: 30em;
+        margin: auto;
+        padding: 2em;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
     a {
         cursor: pointer;
         text-align: center;
@@ -34,7 +53,7 @@
     const LANGS = Object.keys(LINGO)
     for (const lang of LANGS) {
         if (LINGO[lang].retries[5] == 5) {
-            addLink(`lingo.html?${lang}:5`, lang)
+            addLink(`lingo/lingo.html?${lang}:5`, lang)
         }
     }
     for (const lang of LANGS) {
@@ -42,7 +61,7 @@
         for (const size of SIZES) {
             const retries = LINGO[lang].retries[size]
             if (size != 5 || retries != 5) {
-                addLink(`lingo.html?${lang}:${size}`, `${lang} ${size}x${retries}`)
+                addLink(`lingo/lingo.html?${lang}:${size}`, `${lang} ${size}x${retries}`)
             }
         }
     }
