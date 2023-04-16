@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="lingo.css">
+<script src="dictionary/index.js"></script>
+<style>
+    a {
+        cursor: pointer;
+        text-align: center;
+        font-size: 2em;
+        display: inline-block;
+        padding: 10px 20px;
+        margin-bottom: 0.5em;
+        background-color: dodgerblue;
+        border-color: dodgerblue;
+        color: white;
+        text-decoration: none;
+        border-radius: 15px;
+        border-style: outset;
+        border-width: 4px;
+    }
+
+    a:hover {
+        background-color: seagreen;
+        border-color: seagreen;
+        border-style: inset;
+    }
+</style>
+
+<h1 id="stats">
+    <span class="title">LINGO</span>
+</h1>
+<script>
+    const mainEL = document.querySelector('main')
+    const LANGS = Object.keys(LINGO)
+    for (const lang of LANGS) {
+        if (LINGO[lang].retries[5] == 5) {
+            addLink(`lingo.html?${lang}:5`, lang)
+        }
+    }
+    for (const lang of LANGS) {
+        const SIZES = Object.keys(LINGO[lang].retries)
+        for (const size of SIZES) {
+            const retries = LINGO[lang].retries[size]
+            if (size != 5 || retries != 5) {
+                addLink(`lingo.html?${lang}:${size}`, `${lang} ${size}x${retries}`)
+            }
+        }
+    }
+    function addLink(link, label) {
+        const linkEl = document.createElement("a")
+        linkEl.href = link
+        linkEl.textContent = label[0].toLocaleUpperCase() + label.slice(1)
+        document.body.appendChild(linkEl)
+    }
+</script>

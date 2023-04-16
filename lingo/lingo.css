@@ -1,0 +1,98 @@
+html {
+    background-color: black;
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    min-width: 20em;
+    max-width: 30em;
+    margin: auto;
+}
+
+#stats {
+    display: flex;
+}
+
+#stats .life {
+    color: red;
+}
+
+#stats .score {
+    color: orange;
+}
+
+#stats .title {
+    flex-grow: 1;
+    text-align: center;
+}
+
+#board {
+    display: grid;
+    /* grid-template-columns: repeat(5, 1fr); */
+    gap: 10px;
+}
+
+.tile {
+    position: relative;
+    padding-top: 100%;
+    background-color: dodgerblue;
+    border-radius: 15%;
+    border-style: outset;
+    border-color: dodgerblue;
+    border-width: 4px;
+    color: black;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+    font-weight: bold;
+}
+
+.tile.entered {
+    color: white;
+    border-style: inset;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.letter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4em;
+    text-align: center;
+}
+
+.letter.wrong {
+    background-color: red;
+    border-radius: 50%;
+    border-style: double;
+}
+
+.letter.another {
+    background-color: goldenrod;
+    border-radius: 50%;
+    border-style: dashed;
+}
+
+.letter.right {
+    background-color: seagreen;
+    border-radius: 15%;
+    border-style: inherit;
+}
+
+#keyboard button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 20px;
+    text-align: center;
+    line-height: 40px;
+}
