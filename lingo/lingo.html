@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="lingo.css">
 <script src="dictionary/index.js"></script>
 <script src="dictionary/english/size4.js"></script>
@@ -17,14 +18,14 @@
 </h1>
 
 <div id="board"></div>
-<div id="keyboard"></div>
+<!-- <div id="keyboard"></div> -->
 
 <script>
     let [LANG, WORDSIZE] = location.search.slice(1).split(':')
     LANG ||= randomItem(Object.keys(LINGO))
-    WORDSIZE ||= randomItem(Object.keys(LINGO[LANG].dictionaries)) 
+    WORDSIZE ||= randomItem(Object.keys(LINGO[LANG].dictionaries))
     const boardEl = document.getElementById('board')
-    const statsEl = document.getElementById('stats') 
+    const statsEl = document.getElementById('stats')
     const keyboardEl = document.getElementById('keyboard')
     const lingo = Lingo(LANG, Number(WORDSIZE), boardEl, statsEl, keyboardEl)
 </script>

@@ -1,9 +1,5 @@
-function randomItem(items) {
-    return items[Math.floor(Math.random() * items.length)]
-}
-
 // Compares the guessed word G with the mystery word M and
-// returns and array with either 'right', 'another' or false
+// returns an array with either 'right', 'another' or false.
 // Example: compareWords("tax", "cat") => ['another', 'right', false]
 function compareWords(G, M) {
     const res = [...G].map((ai, i) => ai === M[i] ? 'right' : false)
@@ -20,6 +16,12 @@ function compareWords(G, M) {
     return res
 }
 
+// Returns a random item in the given array
+function randomItem(items) {
+    return items[Math.floor(Math.random() * items.length)]
+}
+
+// Plays Lingo
 function Lingo(LANG, WORDSIZE, boardEl, statsEl, keyboardEl) {
     const LETTERS = LINGO[LANG].letters.join('').toUpperCase()
     const DICTIONARY = LINGO[LANG].dictionaries[WORDSIZE]
@@ -30,6 +32,7 @@ function Lingo(LANG, WORDSIZE, boardEl, statsEl, keyboardEl) {
     LingoKeyboard(keyboardEl, LINGO[LANG].letters)
 
     let mysteryWord, hintLetters;
+
     function nextWord() {
         mysteryWord = randomItem(DICTIONARY).toUpperCase()
         hintLetters = Array(WORDSIZE).fill()
@@ -41,7 +44,7 @@ function Lingo(LANG, WORDSIZE, boardEl, statsEl, keyboardEl) {
         board.enableInput()
     }
 
-    nextWord()
+    nextWord() // Start the game
 
     async function onSubmit(word, isLastWord) {
         if (DICTIONARY.includes(word.toLowerCase())) {
@@ -50,21 +53,21 @@ function Lingo(LANG, WORDSIZE, boardEl, statsEl, keyboardEl) {
             if (word == mysteryWord) { // Correct word
                 if (!isLastWord) stats.addLife()
                 stats.addScore(100)
-                await board.pause()
+                await board.pause(2)
                 nextWord()
             } else if (isLastWord) { // No more tries
                 await board.pause()
-                board.setWord(mysteryWord)
+                board.setHint(mysteryWord)
                 board.showResult(Array(WORDSIZE).fill('right'))
                 stats.takeLife()
                 if (stats.hasLife()) {
-                    await board.pause(2000)
+                    await board.pause(5)
                     nextWord()
                 } else {
                     board.disableInput()
                 }
-            } else { // Try again
-                board.nextWord()
+            } else { // Try again on next line
+                board.nextLine()
                 hintLetters = hintLetters.map((letter, i) => (
                     result[i] == 'right' ? mysteryWord[i] : letter
                 ))
@@ -74,13 +77,14 @@ function Lingo(LANG, WORDSIZE, boardEl, statsEl, keyboardEl) {
             board.showResult(Array(WORDSIZE).fill('wrong'))
             board.disableInput()
             await board.pause()
-            if(stats.hasLife(2)) stats.takeLife()
+            //if(stats.hasLife(2)) stats.takeLife()
             board.enableInput()
             board.clearWord()
         }
     }
 }
 
+// Draws and manages life and score on the statsEl element
 function LingoStats(statsEl, LIVESMAX, life = 0, score = 0) {
     const lifeEl = statsEl.querySelector('.life')
     const scoreEl = statsEl.querySelector('.score')
@@ -92,22 +96,20 @@ function LingoStats(statsEl, LIVESMAX, life = 0, score = 0) {
         lifeEl.textContent = life ? '♥'.repeat(life) : 'Game Over'
     }
 
-    function takeLife(n = 1) {
-        addLife(-n)
-    }
-
-    function hasLife(n = 1) {
-        return life >= n
-    }
-
     function addScore(n) {
         score += n
         scoreEl.textContent = score
     }
 
-    return { addLife, takeLife, hasLife, addScore }
+    return { 
+        addScore,
+        addLife,
+        takeLife: (n = 1) => addLife(-1),
+        hasLife: (n  =1) => life > n
+    }
 }
 
+// Draws and manages the virtual keyboard on keyboardEl
 function LingoKeyboard(keyboardEl, LETTERS) {
     // for (const row of LETTERS) {
     //     for (const letter of row) {
@@ -118,6 +120,7 @@ function LingoKeyboard(keyboardEl, LETTERS) {
     // }
 }
 
+// Draws and manages the Lingo game board on boardEl 
 function LingoBoard(boardEl, WORDSIZE, RETRIES, LETTERS, handleSubmit) {
     let cursorMin, cursorMax, cursorAt
     let word = ""
@@ -141,9 +144,10 @@ function LingoBoard(boardEl, WORDSIZE, RETRIES, LETTERS, handleSubmit) {
         letterElems.push(letter)
     }
 
-    const clearLetter = (el) => {
-        el.textContent = ''
-        el.classList.remove('right', 'wrong', 'another')
+    function clearTile(i) {
+        letterElems[i].textContent = ''
+        letterElems[i].classList.remove('right', 'wrong', 'another')
+        tileElems[i].classList.remove('entered')
     }
 
     function clear() {
@@ -152,27 +156,21 @@ function LingoBoard(boardEl, WORDSIZE, RETRIES, LETTERS, handleSubmit) {
         cursorMax = WORDSIZE
         cursorAt = cursorMin
         hintLetters = []
-        letterElems.forEach(clearLetter)
+        for (let i = 0; i < tileElems.length; ++i) {
+            clearTile(i)
+        }
     }
 
     function clearWord() {
         word = ""
         cursorAt = cursorMin
         for (let i = 0; i < WORDSIZE; ++i) {
-            clearLetter(letterElems[cursorMin + i])
-            tileElems[cursorMin + i].classList.remove('entered')
+            clearTile(cursorMin + i)
         }
         updateHint()
     }
 
-    function setWord(word) {
-        for (let i = 0; i < WORDSIZE; ++i) {
-            letterElems[cursorMin + i].textContent = word[i]
-            tileElems[cursorMin + i].classList.remove('entered')
-        }
-    }
-
-    function nextWord() {
+    function nextLine() {
         cursorMin += WORDSIZE
         cursorMax += WORDSIZE
         clearWord()
@@ -192,7 +190,7 @@ function LingoBoard(boardEl, WORDSIZE, RETRIES, LETTERS, handleSubmit) {
     }
 
     function insert(letter) {
-        if (cursorAt < cursorMax) {
+        if (cursorAt < cursorMax && LETTERS.includes(letter)) {
             letterElems[cursorAt].textContent = letter
             tileElems[cursorAt].classList.add('entered')
             word += letter
@@ -211,24 +209,19 @@ function LingoBoard(boardEl, WORDSIZE, RETRIES, LETTERS, handleSubmit) {
         }
     }
 
+    function submitWord() {
+        if (cursorAt == cursorMax) {
+            const isLastWord = cursorMax == letterElems.length
+            handleSubmit(word, isLastWord)
+        }
+    }
+
     function onKeyInput(e) {
         e.preventDefault()
         switch (e.key) {
-            case 'Enter':
-                if (cursorAt == cursorMax) {
-                    handleSubmit(word, cursorMax == letterElems.length)
-                }
-                break
-            case 'Backspace':
-                deleteLetter()
-                break
-            default:
-                if (e.key.length == 1) {
-                    const letter = e.key.toUpperCase()
-                    if (cursorAt < cursorMax && LETTERS.includes(letter)) {
-                        insert(letter)
-                    }
-                }
+            case 'Enter': submitWord(); break;
+            case 'Backspace': deleteLetter(); break;
+            default: if (e.key.length == 1) insert(e.key.toUpperCase());
         }
     }
 
@@ -245,11 +238,11 @@ function LingoBoard(boardEl, WORDSIZE, RETRIES, LETTERS, handleSubmit) {
         window.onkeydown = undefined
     }
 
-    function pause(timeout = 1000) {
+    function pause(timeout = 1) {
         return new Promise(resolve => {
-            window.setTimeout(resolve, timeout)
+            window.setTimeout(resolve, timeout * 1000)
         })
     }
 
-    return { clear, clearWord, setWord, nextWord, setHint, enableInput, disableInput, pause, showResult }
+    return { clear, clearWord, nextLine, setHint, enableInput, disableInput, pause, showResult }
 }
