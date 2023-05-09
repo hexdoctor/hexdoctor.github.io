@@ -57,6 +57,7 @@ function Lingo(LANG, WORDSIZE, boardEl, statsEl, keyboardEl) {
                 nextWord()
             } else if (isLastWord) { // No more tries
                 await board.pause()
+                board.clearWord()
                 board.setHint(mysteryWord)
                 board.showResult(Array(WORDSIZE).fill('right'))
                 stats.takeLife()
@@ -104,8 +105,8 @@ function LingoStats(statsEl, LIVESMAX, life = 0, score = 0) {
     return { 
         addScore,
         addLife,
-        takeLife: (n = 1) => addLife(-1),
-        hasLife: (n  =1) => life > n
+        takeLife: (n = 1) => addLife(-n),
+        hasLife: (n = 1) => life >= n
     }
 }
 
