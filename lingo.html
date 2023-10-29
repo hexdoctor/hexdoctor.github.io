@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="index.css">
+<script src="lingo/dictionary/index.js"></script>
+<h1 id="stats">
+    <span class="title">LINGO</span>
+</h1>
+<script>
+    const mainEL = document.querySelector('main')
+    const LANGS = Object.keys(LINGO)
+    for (const lang of LANGS) {
+        if (LINGO[lang].retries[5] == 5) {
+            addLink(`lingo/lingo.html?${lang}:5`, lang)
+        }
+    }
+    for (const lang of LANGS) {
+        const SIZES = Object.keys(LINGO[lang].retries)
+        for (const size of SIZES) {
+            const retries = LINGO[lang].retries[size]
+            if (size != 5 || retries != 5) {
+                addLink(`lingo/lingo.html?${lang}:${size}`, `${lang} ${size}x${retries}`)
+            }
+        }
+    }
+    function addLink(link, label) {
+        const linkEl = document.createElement("a")
+        linkEl.href = link
+        linkEl.textContent = label[0].toLocaleUpperCase() + label.slice(1)
+        document.body.appendChild(linkEl)
+    }
+</script>

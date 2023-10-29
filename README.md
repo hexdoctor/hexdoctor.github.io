@@ -1,6 +1,6 @@
 # Hexdoctor Games
 
-Automatically deplyed to:
+The main branch is automatically hosted at:
 
 <https://hexdoctor.github.io/>
 

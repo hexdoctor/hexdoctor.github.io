@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+<link rel="stylesheet" href="quiz.css">
+
+<body>
+    <table></table>
+    <script>
+        const ICONS = {
+            music: ["🎹", "Music", "blue"],
+            sport_and_leisure: ["⚽", "Sports & Leisure", "darkcyan"],
+            film_and_tv: ["🎬", "Film", "deeppink"],
+            arts_and_literature: ["🎭", "Arts & Literature", "darkred"],
+            history: ["🪶", "History", "darkgoldenrod"],
+            society_and_culture: ["🪅", "Society & Culture", "darkmagenta"],
+            science: ["🧪", "Science", "saddlebrown"],
+            geography: ["🌍", "Geography", "darkgreen"],
+            food_and_drink: ["🍔", "Food & Drinks", "orangered"],
+            general_knowledge: ["🌟", "General Knowledge", "darkslategray"],
+        }
+
+        const html = document.querySelector('html')
+        const body = document.querySelector('body')
+        const table = document.querySelector('table')
+
+        let zIndex = 1;
+
+        /** @type{(el: HTMLElement) => void} **/
+        function center(el) {
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                const parentRect = el.parentElement.getBoundingClientRect();
+                let x = -el.offsetLeft + parentRect.width / 2 - rect.width / 2;
+                let y = -el.offsetTop + parentRect.height / 2 - rect.width / 2;
+                table.style.transform = `translate(${x}px, ${y}px)`;
+            } else {
+                table.style.transform = `translate(0px, 0px)`;
+            }
+        }
+
+        /** @type{(el: HTMLElement) => void} **/
+        function show(elToShow) {
+            document.querySelectorAll(".show").forEach(el => {
+                if (el != elToShow) {
+                    el.classList.remove("show");
+                    el.classList.add("shown");
+                }
+            })
+            if (elToShow) {
+                elToShow.classList.add("show");
+                elToShow.style.zIndex = zIndex++;
+            }
+        }
+
+        window.onclick = (e) => {
+            if ([html, body, table].includes(e.target)) {
+                show(null);
+                center(null);
+            }
+        }
+
+        /** @type{(td: HTMLTableCellElement, q) => void} **/
+        function click(td, q) {
+            show(td);
+            center(td);
+        }
+
+        function createFrontCard(q) {
+            const [icon, name, color] = ICONS[q.category];
+            const front = document.createElement('div');
+            front.className = 'front'
+            const category = document.createElement('h2');
+            category.textContent = name;
+            const symbol = document.createElement('p');
+            symbol.textContent = icon;
+            const difficulty = document.createElement('label')
+            difficulty.textContent = q.difficulty;
+            front.append(category, symbol, difficulty)
+            front.style.backgroundColor = color;
+            return front;
+        }
+
+        function createBackCard(q) {
+            const [icon, name, color] = ICONS[q.category];
+            const back = document.createElement('div');
+            back.className = 'back'
+            const question = document.createElement('p')
+            question.innerText = q.question.text
+            const n = q.incorrectAnswers.length + 1;
+            const answers = [...q.incorrectAnswers];
+            answers.splice(Math.floor(Math.random() * n), 0, q.correctAnswer);
+            back.append(question, ...answers.map(a => {
+                const button = document.createElement('button')
+                button.textContent = a
+                button.addEventListener('click', () => {
+                    button.className = a == q.correctAnswer ? 'right' : 'wrong'
+                })
+                return button
+            }))
+            back.style.borderColor = color;
+            return back;
+        }
+
+        function createCard(q) {
+            const front = createFrontCard(q);
+            const back = createBackCard(q);
+            const td = document.createElement('td');
+            td.append(front, back)
+            td.addEventListener('click', () => click(td, q))
+            return td;
+        }
+
+        function render(qs) {
+            table.textContent = '';
+            table.append(...qs.map(createCard));
+        }
+
+        // See the docs: https://the-trivia-api.com/docs/v2/
+        fetch('https://the-trivia-api.com/v2/questions?region=SE')
+            //fetch('questions.json')
+            .then((res) => res.json())
+            .then(render)
+    </script>
+</body>
