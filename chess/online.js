@@ -31,7 +31,7 @@ class OnlineChessGame extends ChessGame {
 
     showGamePicker() {
         const today = new Date();
-        const yesterday =  today.setDate(today.getDate() - 1);
+        const yesterday = today.setDate(today.getDate() - 1);
         const unsubscribe = this.db.collection("games").where('createdAt', '>', yesterday).onSnapshot((snap) => {
             const menuList = onlineDialog.querySelector('menu ul');
             const children = [];
@@ -95,9 +95,8 @@ class OnlineChessGame extends ChessGame {
     }
 
     onDialog(dialog) {
-        super.onDialog(dialog);
         dialog.hide('#redo-button');
-        dialog.disable('#undo-button', !this.isActiveColor);
+        dialog.disable('#undo-button', !this.isActiveColor || !this.hasHistory);
     }
 
     dehydrate({ from, to, promoted, enpassant, time, delay }) {
@@ -145,6 +144,7 @@ class OnlineChessGame extends ChessGame {
     }
 
     onClick(square) {
+        this.board.forEach(square => square.deselect());
         if (!this.isActiveColor) return;
         super.onClick(square);
     }
@@ -162,9 +162,12 @@ class OnlineChessGame extends ChessGame {
         } else {
             super.doMove(move);
         }
-        if (move.checksum != this.toString()) {            
+        if (move.checksum != this.toString()) {
             console.error('ACTUAL:', move.checksum, '\n', 'EXPECTED:', this.toString());
         }
+        this.board.forEach(square => square.deselect());
+        this.lastMove.from?.select();
+        this.lastMove.to?.select();
     }
 
     doMove(next, keepFuture = false) {
@@ -181,4 +184,6 @@ class OnlineChessGame extends ChessGame {
     redoMove() { }
 }
 
-window.GAME = new OnlineChessGame();
+window.GAME = searchParams.get('local') == null ? 
+    new OnlineChessGame() :
+    new ChessGame();

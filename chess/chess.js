@@ -160,7 +160,10 @@ class ChessGame {
     get secondLastMove() { return this.historyMoves.slice(-2)[0]; };
     get nextMove() { return this.futureMoves.slice(-1)[0]; };
 
-    onDialog() { }
+    onDialog(dialog) {
+        dialog.disable('#redo-button', !this.hasFuture);
+        dialog.disable('#undo-button', !this.hasHistory);
+    }
 
     onClick(square) {
         const piece = square.piece;

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/x-icon" href="pieces/♚.svg">
+<meta name="viewport"
+    content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
 <style>
     :root {
         --board-light: burlywood;
         --board-dark: sienna;
         --board-highlight: dodgerblue;
+        touch-action: none;
     }
 
     html,
@@ -23,6 +26,7 @@
 
     button {
         font-size: 1.2rem;
+        color: black;
         background-color: var(--board-light);
         border: 4px outset var(--board-dark);
         border-radius: 8px;
@@ -96,28 +100,36 @@
     }
 
     .timer {
-        font-size: xx-large;
+        font-size: x-large;
         font-family: ui-monospace;
         align-items: stretch;
         margin: 0.4rem;
         text-align: center;
+        transform: scale(0.8);
+        opacity: 0.5;
+        transition: opacity 0.5s, transform 0.5s;
+    }
+
+    .timer.active {
+        border: 1px dashed;
+        border-color: var(--board-highlight);
+        transform: scale(1);
+        opacity: 1;
     }
 
     .timer p {
         margin: 0;
         padding: 0.4rem;
         border: 1px dashed;
-        opacity: 0.5;
-        transition: opacity 0.5s;
     }
 
-    .timer.active p {
+    /* .timer.active p {
         margin: 0;
         padding: 0.4rem;
         border: 1px dashed;
         border-color: var(--board-highlight);
         opacity: 1;
-    }
+    } */
 
     #blackTimer p {
         background-color: black;
@@ -136,9 +148,9 @@
         aspect-ratio: 1;
         width: 100%;
         height: auto;
-        background-color: var(--board-dark);
+        background-color: var(--board-highlight);
         border: 6px solid var(--board-light);
-        transition: transform 1s;
+        transition: transform 0.5s;
     }
 
     @media (orientation: landscape) {
@@ -175,13 +187,22 @@
         text-align: center;
         justify-content: center;
         align-items: center;
-        border: 6px dashed transparent;
+        border: 2px dashed transparent;
+        position: relative;
     }
+
+    /* td:after {
+        content: '⇧';
+        position: absolute;
+        left: 0;
+        right: 0;
+    } */
 
     td.selectable {
         border-color: var(--board-highlight);
         border-radius: 6px;
         cursor: pointer;
+        opacity: 0.5;
     }
 
     td.white {
@@ -195,7 +216,7 @@
     td img {
         cursor: pointer;
         width: 100%;
-        transition: transform 0.5s;
+        transition: transform 0.3s;
         transform-origin: center;
     }
 
@@ -226,8 +247,8 @@
         <!-- <label>≡</label> -->
         <menu>
             <button onclick="flipTable()">Flip</button>
-            <button id="undo-button" disabled onclick="GAME.undoMove()">Undo</button>
-            <button id="redo-button" disabled onclick="GAME.redoMove()">Redo</button>
+            <button id="undo-button" onclick="GAME.undoMove()">Undo</button>
+            <button id="redo-button" onclick="GAME.redoMove()">Redo</button>
             <button id="quit-button" onclick="GAME.quit();">Quit</button>
             <!-- <button onclick="test()">!</button> -->
         </menu>
@@ -250,9 +271,9 @@
     </dialog>
     <template id="online-item">
         <li>
-            <button data-color="white" style="font-size: xx-large">♔</button>
+            <button data-color="white" style="font-size:2rem;line-height: 1.5rem;">♔</button>
             <span style="flex-grow: 1;"></span>
-            <button data-color="black" style="font-size: xx-large">♚</button>
+            <button data-color="black" style="font-size:2rem;line-height: 1.5rem;">♚</button>
             <!-- <button data-color="black" style="font-size: xx-large">✖</button> -->
         </li>
     </template>
