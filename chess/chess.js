@@ -28,6 +28,9 @@ class ChessSquare {
         return el && ChessPiece.fromElement(el);
     }
 
+    get selected() {
+        return this.td.classList.contains('selectable');
+    }
     select() {
         this.td.classList.add('selectable');
     }
@@ -51,6 +54,7 @@ class ChessPiece {
         this.id = id;
         this.el = document.createElement('IMG');
         this.el.src = `pieces/${id}.svg`;
+        this.el.draggable = true;
         this.el[Symbol.for('chess.piece')] = this;
     }
 
@@ -61,6 +65,11 @@ class ChessPiece {
         // To avoid a clipping problem when tables is flipped
         this.el.parentElement.style.zIndex = 1;
     }
+
+    get selected() {
+        return this.el.classList.contains('selected');
+    }
+
     deselect() {
         this.el.classList.remove('selected');
         this.el.parentElement.style.zIndex = 'revert';
@@ -81,7 +90,7 @@ class ChessBoard {
         return this.squares[r]?.[f];
     }
     constructor(onClick) {
-        this.table = document.querySelector('TABLE');
+        const table = this.table = document.querySelector('TABLE');
         table.textContent = '';
         this.forEach((_, r, f) => {
             const square = new ChessSquare(r, f);
@@ -98,11 +107,54 @@ class ChessBoard {
             }
         }
 
+        table.ondragstart = (e) => {
+            e.stopPropagation();
+            const piece = ChessPiece.fromElement(e.target);
+            if (piece && !piece.selected) {
+                this.handleClick(e);
+            }
+            if (!piece?.selected) {
+                e.preventDefault();
+            } else {
+                const img = e.target;
+                img.style.opacity = 0;
+                e.dataTransfer.effectAllowed = 'move';
+                piece.deselect();
+                //const img = evt.target.cloneNode();
+                //img.setAttribute('style', 'position: absolute; left: 0px; top: 0px; width: 40px; height: 40px; background: red; z-index: -1');
+                //evt.dataTransfer.setDragImage(img, img.width/2, img.height/2);
+            }
+        }
+
+        table.ondragend = (e) => {
+            const img = e.target;
+            img.style.opacity = 1;
+            onClick();
+        }
+
+        this.forEach(square => {
+            const ondrag = (e) => {
+                e.stopPropagation();
+                if (square.selected && e.target == square.td) {
+                    e.preventDefault();
+                }
+            }
+            square.td.ondragenter = ondrag;
+            square.td.ondragover = ondrag;
+            square.td.ondrop = () => onClick(square);
+        })
+
         table.addEventListener('click', this.handleClick);
     }
 
     dispose() {
+        this.forEach(square => {
+            square.td.ondragenter =  null;
+            square.td.ondragover = null;
+            square.td.ondrop = null;
+        })
         this.table.removeEventListener('click', this.handleClick);
+        this.table.ondragstart = null;
     }
 
     setup(position = STANDARD_POSITION) {
@@ -181,7 +233,7 @@ class ChessGame {
     }
 
     onClick(square) {
-        const piece = square.piece;
+        const piece = square?.piece;
         const selectedMove = this.getSelectableMoveTo(square);
         const isSelecting = !selectedMove && piece != this.selectedPiece;
         const isActiveColor = piece?.color == this.lastMove.activeColor;
