@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="pieces/♚.svg">
 <meta name="viewport"
-    content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
 <style>
     :root {
         --board-light: burlywood;
@@ -191,13 +191,6 @@
         position: relative;
     }
 
-    /* td:after {
-        content: '⇧';
-        position: absolute;
-        left: 0;
-        right: 0;
-    } */
-
     td.selectable {
         border-color: var(--board-highlight);
         border-radius: 6px;
@@ -227,6 +220,7 @@
 </style>
 
 <body>
+    <audio id="dropSound" src="drop.mp3"></audio>
     <section>
         <section id="whiteTimer" class="timer">
             <p>♔</p>
@@ -241,8 +235,7 @@
         </section>
     </section>
     <table></table>
-    <section id="tray" style="flex-wrap: wrap;">
-    </section>
+    <section id="tray" style="flex-wrap:wrap;justify-content:center;padding:1rem"></section>
     <dialog id="game-dialog">
         <!-- <label>≡</label> -->
         <menu>
@@ -254,11 +247,9 @@
         </menu>
         <!-- <label id="status"></label> -->
     </dialog>
-    <dialog id="promotion-dialog">
-        <menu></menu>
-    </dialog>
-    <dialog id="dialog">
-        <menu></menu>
+    <dialog id="common-dialog">
+        <h2></h2>
+        <menu style="flex-direction:row;"></menu>
     </dialog>
     <dialog id="online-dialog">
         <menu style="flex-direction:column">
@@ -281,6 +272,7 @@
 <script>
     window.GAME = null;
     const table = document.querySelector('table');
+    window.dropSound = document.querySelector('#dropSound');
 
     const gameDialog = document.querySelector('#game-dialog');
     gameDialog.onclick = function (e) {
@@ -302,10 +294,6 @@
         gameDialog.showModal();
     }
 
-    function hideGameDialog() {
-
-    }
-
     function flipTable(color) {
         if (color == 'black') table.classList.add('flip');
         else if (color == 'white') table.classList.remove('flip');
@@ -313,8 +301,9 @@
     }
 
     function test() {
-        const tray = document.querySelector('#tray');
-        tray.append(new ChessPiece((PIECES.black + PIECES.white)[Math.floor(Math.random() * 12)]).el);
+        for (let i = 0; i < 12; ++i) {
+            GAME?.capturePiece(new ChessPiece((PIECES.black + PIECES.white)[Math.floor(Math.random() * 12)]));
+        }
     }
 
     function setTimer(color, hh, mm, ss, active) {
@@ -340,40 +329,36 @@
         }
     }, 500);
 
-    // function showDialog(options, direction) {
-    //     const dialog = document.querySelector('#dialog');
-    //     const menu = dialog.querySelector('menu');
-    //     if (direction) menu.style.flexDirection = direction;
-    //     menu.append(...options);
-    //     dialog.showModal();
-    //     return new Promise(resolve => {
-    //         menu.onclick = ({ target }) => {
-    //             while (target && target.parentElement != menu) {
-    //                 target = target.parentElement;
-    //             }
-    //             if (target) {
-    //                 menu.onclick = null;
-    //                 dialog.close();
-    //                 resolve(target);
-    //             }
-    //         }
-    //     })
-    // }
-
-    const promotionDialog = document.querySelector('#promotion-dialog');
-    function showPromotionDialog(pieces) {
-        const menu = promotionDialog.querySelector('menu');
-        menu.append(...pieces.map(p => p.el));
-        promotionDialog.showModal();
+    function showPromptDialog(question, ...answers) {
+        const items = answers.map(answer => {
+            const item = document.createElement('BUTTON');
+            item.textContent = answer;
+            return item;
+        });
+        return showDialog(question, items, (item) => item.textContent);
+    }
+    function showDialog(title, items, onClick) {
+        const dialog = document.querySelector('#common-dialog');
+        const menu = dialog.querySelector('menu');
+        dialog.querySelector('h2').textContent = title || ''
+        menu.replaceChildren(...items);
+        dialog.oncancel = e => e.preventDefault();
+        dialog.showModal();
         return new Promise(resolve => {
             menu.onclick = ({ target }) => {
-                const piece = ChessPiece.fromElement(target);
-                menu.textContent = '';
-                promotionDialog.close();
-                menu.onclick = null;
-                if (piece) resolve(piece);
+                while (target && target.parentElement != menu) {
+                    target = target.parentElement;
+                }
+                if (items.includes(target)) {
+                    const value = onClick(target);
+                    if (value != undefined) {
+                        menu.onclick = null;
+                        dialog.close();
+                        resolve(value);
+                    }
+                }
             }
-        });
+        })
     }
 
 </script>

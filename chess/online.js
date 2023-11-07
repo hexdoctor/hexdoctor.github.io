@@ -64,28 +64,41 @@ class OnlineChessGame extends ChessGame {
         });
     }
 
-    startGame(doc, color) {
+    async startGame(doc, color) {
         this.doc = doc;
         this.color = color;
 
         flipTable(color);
-        this.reset();
+        this.reset(doc.data().position);
+
+        if (doc.data().moves && doc.data().moves) {
+            const res = await showPromptDialog('', "Restart", "Continue");
+            if (res == "Restart") {
+                await doc.ref.update({ createdAt: Date.now(), moves: null });
+            }
+        }
 
         this.doneMoves = [];
+        this.unsubscribe = doc.ref.onSnapshot(this.onSnapshot.bind(this));
+    }
 
-        this.unsubscribe = doc.ref.onSnapshot((snap) => {
-            if (snap.exists) {
-                const moves = snap.data()?.moves || [];
-                for (const i in moves) {
-                    if (!this.doneMoves[i]) {
-                        this.doneMoves[i] = moves[i];
-                        this.receiveMove(this.hydrate(moves[i]));
-                    }
-                }
-            } else {
-                this.quit();
+     async onSnapshot(snap) {
+        if (snap.exists) {
+            const moves = snap.data()?.moves || [];
+            const createdAt = snap.data()?.createdAt;
+            if (this.createdAt != createdAt) {
+                this.reset(snap.data()?.position);
+                this.doneMoves = [];
             }
-        })
+            for (const i in moves) {
+                if (!this.doneMoves[i]) {
+                    this.doneMoves[i] = moves[i];
+                    await this.receiveMove(this.hydrate(moves[i]));
+                }
+            }
+        } else {
+            this.quit();
+        }
     }
 
     quit() {
@@ -156,22 +169,22 @@ class OnlineChessGame extends ChessGame {
         })
     }
 
-    receiveMove(move) {
+    async receiveMove(move) {
         if (move.type == 'undo') {
             super.undoMove();
         } else {
-            super.doMove(move);
+            await super.doMove(move);
         }
         if (move.checksum != this.toString()) {
-            console.error('ACTUAL:', move.checksum, '\n', 'EXPECTED:', this.toString());
+            console.error('EXPECTED:', move.checksum, '\n', 'ACTUAL:', this.toString());
         }
         this.board.forEach(square => square.deselect());
         this.lastMove.from?.select();
         this.lastMove.to?.select();
     }
 
-    doMove(next, keepFuture = false) {
-        super.doMove(next, keepFuture);
+    async doMove(next, keepFuture = false) {
+        await super.doMove(next, keepFuture);
         this.sendMove(this.dehydrate(this.lastMove));
     }
 
@@ -184,6 +197,6 @@ class OnlineChessGame extends ChessGame {
     redoMove() { }
 }
 
-window.GAME = searchParams.get('local') == null ? 
+window.GAME = searchParams.get('local') == null ?
     new OnlineChessGame() :
     new ChessGame();

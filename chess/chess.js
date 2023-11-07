@@ -28,8 +28,12 @@ class ChessSquare {
         return el && ChessPiece.fromElement(el);
     }
 
-    select() { this.td.classList.add('selectable'); }
-    deselect() { this.td.classList.remove('selectable'); }
+    select() {
+        this.td.classList.add('selectable');
+    }
+    deselect() {
+        this.td.classList.remove('selectable');
+    }
 }
 
 class ChessPiece {
@@ -52,8 +56,15 @@ class ChessPiece {
 
     static fromElement(el) { return el[Symbol.for('chess.piece')]; }
 
-    select() { this.el.classList.add('selected'); }
-    deselect() { this.el.classList.remove('selected'); }
+    select() {
+        this.el.classList.add('selected');
+        // To avoid a clipping problem when tables is flipped
+        this.el.parentElement.style.zIndex = 1;
+    }
+    deselect() {
+        this.el.classList.remove('selected');
+        this.el.parentElement.style.zIndex = 'revert';
+    }
 }
 
 class ChessBoard {
@@ -135,6 +146,7 @@ class ChessBoard {
 class ChessGame {
 
     constructor(position) {
+        this.tray = document.querySelector('#tray');
         this.reset(position)
     }
 
@@ -145,6 +157,9 @@ class ChessGame {
         this.board = new ChessBoard(this.onClick.bind(this));
         this.historyMoves = [this.board.setup(position)];
         this.futureMoves = [];
+        this.tray.textContent = '';
+        this.capturedPieces = [];
+        //this.tray.style.after.content = "BAJS";
     }
 
     quit() { this.gameover = true; }
@@ -192,7 +207,7 @@ class ChessGame {
         return enpassantWalk(this.board, from).to;
     }
 
-    doMove(next, keepFuture = false) {
+    async doMove(next, keepFuture = false) {
         this.keepTime(next);
         const last = this.lastMove;
         next.toPiece = next.to.piece;
@@ -205,7 +220,7 @@ class ChessGame {
         if (next.piece.type == '♔') {
             next.castles = last.castles.filter(c => c.color != last.activeColor);
         } else if (next.piece.type == '♖') {
-            next.castles = last.castles.filter(c => c == next.piece);
+            next.castles = last.castles.filter(c => c != next.piece);
         } else {
             next.castles = last.castles;
         }
@@ -213,14 +228,21 @@ class ChessGame {
         if (next.to.piece?.color == last.activeColor) {
             this.doCastling(next);
         } else {
+            if (next.toPiece) this.capturePiece(next.toPiece);
             next.to.place(next.piece);
             if (next.piece.type == '♙' && next.to == last.enpassant) this.doEnpassant(next);
-            if (next.promotions) this.doPromotion(next);
+            await this.doPromotion(next);
         }
 
         if (!keepFuture) this.futureMoves.length = 0;
         this.historyMoves.push(next);
-        //this.debugMove(next);
+        dropSound.play();
+    }
+
+    capturePiece(piece) {
+        this.capturedPieces.push(piece);
+        this.capturedPieces.sort((a,b) => a.id.charCodeAt(0) - b.id.charCodeAt(0));
+        this.tray.replaceChildren(...this.capturedPieces.map(p => p.el));
     }
 
     keepTime(next) {
@@ -236,6 +258,7 @@ class ChessGame {
     doEnpassant(next) {
         const to = this.enpassantWalk(next.to);
         next.enpassantPiece = to.piece;
+        this.capturePiece(to.piece);
         to.empty();
     }
 
@@ -251,11 +274,15 @@ class ChessGame {
     }
 
     async doPromotion(next) {
-        if (!next.promoted) { // it might already be set during redo
+        if (next.promotions && !next.promoted) { // it might already be set during redo
             const pieces = next.promotions.map(id => new ChessPiece(id));
-            next.promoted = await showPromotionDialog(pieces);
+            next.promoted = await showDialog(
+                '',
+                pieces.map(p => p.el),
+                ChessPiece.fromElement,
+            );
         }
-        next.to.place(next.promoted);
+        if (next.promoted) next.to.place(next.promoted);
     }
 
     undoMove() {
