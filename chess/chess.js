@@ -137,6 +137,9 @@ class ChessBoard {
                 e.stopPropagation();
                 if (square.selected && e.target == square.td) {
                     e.preventDefault();
+                //     e.dataTransfer.dropEffect = 'move'
+                // } else {
+                //     e.dataTransfer.dropEffect = 'none';
                 }
             }
             square.td.ondragenter = ondrag;

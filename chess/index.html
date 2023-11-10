@@ -148,7 +148,7 @@
         aspect-ratio: 1;
         width: 100%;
         height: auto;
-        background-color: var(--board-highlight);
+        background-color: var(--board-dark);
         border: 6px solid var(--board-light);
         transition: transform 0.5s;
     }
@@ -187,16 +187,42 @@
         text-align: center;
         justify-content: center;
         align-items: center;
-        border: 2px dashed transparent;
         position: relative;
     }
 
     td.selectable {
-        border-color: var(--board-highlight);
-        border-radius: 6px;
         cursor: pointer;
-        opacity: 0.5;
     }
+
+    td.selectable::before {
+        content: '';
+        background-color: var(--board-highlight);
+        width: 70%;
+        height: 70%;
+        border-radius: 50%;
+        opacity: 0.5;
+        position: absolute;
+        outline: 1px dashed var(--board-highlight);
+        animation: bounceIn 2s both infinite;
+    }
+
+    @keyframes bounceIn {
+        0% {
+            transform: scale(0.9);
+            opacity: 0.9;
+        }
+
+        50% {
+            transform: scale(1);
+            opacity: 0.6;
+        }
+
+        100% {
+            transform: scale(0.9);
+            opacity: 0.9;
+        }
+    }
+
 
     td.white {
         background-color: var(--board-light);
@@ -207,6 +233,7 @@
     }
 
     td img {
+        position: absolute;
         cursor: pointer;
         width: 100%;
         transition: transform 0.3s;
@@ -215,7 +242,9 @@
 
     td img.selected {
         cursor: pointer;
-        transform: scale(1.3);
+        transform: scale(1.2);
+        outline: 2px dashed var(--board-highlight);
+        border-radius: 100%;
     }
 </style>
 
@@ -273,8 +302,14 @@
     window.GAME = null;
     const table = document.querySelector('table');
     window.dropSound = document.querySelector('#dropSound');
-
     const gameDialog = document.querySelector('#game-dialog');
+
+    // window.oncontextmenu = function(event) {
+    //     event.preventDefault();
+    //     event.stopPropagation();
+    //     return false;
+    // };
+
     gameDialog.onclick = function (e) {
         gameDialog.close();
     }
